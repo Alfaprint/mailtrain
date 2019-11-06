@@ -204,6 +204,34 @@ These are the steps to start Mailtrain via docker-compose:
 
 The instructions above use an automatically built Docker image on DockerHub (https://hub.docker.com/r/mailtrain/mailtrain). If you want to build the Docker image yourself (e.g. when doing development), use the `docker-compose-local.yml` located in the project's root directory.
 
+### Development with local nodejs and databases from docker-compose
+
+Run only databases in docker and the node-app locally. The difference is that is does not contain the mailtrain-serive and that each db-container has opened its default-port to the host-computer.
+
+```
+# If you allready has the regular docker-compose running, close it down:
+docker-compose down
+# The startup with custom compose-config
+docker-compose -f docker-compose.local-dev.yml up -d
+docker-compose -f docker-compose.local-dev.yml start
+```
+
+You need to go into these folders and run a `npm install` first:
+
+```
+cd client && npm i && npm run build
+cd shared && npm i
+cd zone-mta && npm i
+cd server && npm i && npm start
+```
+
+Server with then be up running on [localhost:3000](http://localhost:3000)
+
+If you need to debug or change something in frontend, open a secondary shell and:
+
+```
+cd client && npm run watch
+```
 
 ## License
 
