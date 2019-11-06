@@ -23,7 +23,7 @@ const birthdayFormatStrings = {
 };
 
 function parseDate(format, text) {
-    const date = moment.utc(text, dateFormatStrings[format]);
+    const date = moment.utc(text, dateFormatStrings[format || 'eur']);
 
     if (date.isValid()) {
         return date.toDate();

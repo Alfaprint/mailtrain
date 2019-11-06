@@ -232,19 +232,27 @@ fieldTypes.option = {
 
 };
 
+function fixDateField(field) {
+    if (field.settings && !field.settings.dateFormat) {
+        field.settings = JSON.parse(field.settings);
+        return field;
+    }
+    return field;
+}
+
 fieldTypes['date'] = {
     validate: field => {
-        enforce(['eur', 'us'].includes(field.settings.dateFormat), 'Date format incorrect');
+        enforce(['eur', 'us'].includes(fixDateField(field).settings.dateFormat), 'Date format incorrect');
     },
     addColumn: (table, name) => table.dateTime(name),
     indexed: true,
     grouped: false,
     enumerated: false,
     cardinality: Cardinality.SINGLE,
-    getHbsType: field => 'typeDate' + field.settings.dateFormat.charAt(0).toUpperCase() + field.settings.dateFormat.slice(1),
-    forHbs: (field, value) => formatDate(field.settings.dateFormat, value),
-    parsePostValue: (field, value) => parseDate(field.settings.dateFormat, value),
-    render: (field, value) => value !== null ? formatDate(field.settings.dateFormat, value) : ''
+    getHbsType: field => 'typeDate' + fixDateField(field).settings.dateFormat.charAt(0).toUpperCase() + fixDateField(field).settings.dateFormat.slice(1),
+    forHbs: (field, value) => formatDate(fixDateField(field).settings.dateFormat, value),
+    parsePostValue: (field, value) => parseDate(fixDateField(field).settings.dateFormat, value),
+    render: (field, value) => value !== null ? formatDate(fixDateField(field).settings.dateFormat, value) : ''
 };
 
 fieldTypes['birthday'] = {
