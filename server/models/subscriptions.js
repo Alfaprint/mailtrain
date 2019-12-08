@@ -616,6 +616,7 @@ async function _update(tx, listId, groupedFieldsMap, existing, filteredEntity) {
     }
 
     if (filteredEntity) {
+        filteredEntity.updated = new Date();
         await tx(getSubscriptionTableName(listId)).where('id', existing.id).update(filteredEntity);
 
         if ('status' in filteredEntity) {
@@ -863,7 +864,7 @@ async function getListsWithEmail(context, email) {
     // FIXME - this methods is rather suboptimal if there are many lists. It quite needs permission caching in shares.js
 
     return await knex.transaction(async tx => {
-        const lsts = await tx('lists').select(['id', 'name']);
+        const lsts = await tx('lists').select(['id', 'cid', 'name']);
         const result = [];
 
         for (const list of lsts) {

@@ -264,7 +264,7 @@ export default class CUD extends Component {
         for (const lstUid of data.lists) {
             const prefix = 'lists_' + lstUid + '_';
 
-            const useSegmentation = data[prefix + 'useSegmentation'] && (data.type === CampaignType.REGULAR || data.type === CampaignType.RSS);
+            const useSegmentation = data[prefix + 'useSegmentation'];
 
             lsts.push({
                 list: data[prefix + 'list'],
@@ -401,7 +401,7 @@ export default class CUD extends Component {
             }
 
             if (!state.getIn(['data_sourceCustom_tag_language', 'value'])) {
-                state.setIn(['data_sourceCustom_tag_language', 'error'], t('Tag language must be selected'));
+                state.setIn(['data_sourceCustom_tag_language', 'error'], t('tagLanguageMustBeSelected'));
             }
 
             if (customTemplateTypeKey) {
@@ -426,11 +426,9 @@ export default class CUD extends Component {
             if (!state.getIn([prefix + 'list', 'value'])) {
                 state.setIn([prefix + 'list', 'error'], t('listMustBeSelected'));
             }
-
-            if (campaignTypeKey === CampaignType.REGULAR || campaignTypeKey === CampaignType.RSS) {
-                if (state.getIn([prefix + 'useSegmentation', 'value']) && !state.getIn([prefix + 'segment', 'value'])) {
-                    state.setIn([prefix + 'segment', 'error'], t('segmentMustBeSelected'));
-                }
+            
+            if (state.getIn([prefix + 'useSegmentation', 'value']) && !state.getIn([prefix + 'segment', 'value'])) {
+                state.setIn([prefix + 'segment', 'error'], t('segmentMustBeSelected'));
             }
         }
 
@@ -605,15 +603,12 @@ export default class CUD extends Component {
                     </div>
                     <div className={campaignsStyles.entryContent}>
                         <TableSelect id={prefix + 'list'} label={t('list')} withHeader dropdown dataUrl='rest/lists-table' columns={listsColumns} selectionLabelIndex={1} />
-
-                        {(campaignTypeKey === CampaignType.REGULAR || campaignTypeKey === CampaignType.RSS) &&
-                            <div>
-                                <CheckBox id={prefix + 'useSegmentation'} label={t('segment')} text={t('useAParticularSegment')}/>
-                                {selectedList && this.getFormValue(prefix + 'useSegmentation') &&
-                                    <TableSelect id={prefix + 'segment'} withHeader dropdown dataUrl={`rest/segments-table/${selectedList}`} columns={segmentsColumns} selectionLabelIndex={1} />
-                                }
-                            </div>
-                        }
+                        <div>
+                            <CheckBox id={prefix + 'useSegmentation'} label={t('segment')} text={t('useAParticularSegment')}/>
+                            {selectedList && this.getFormValue(prefix + 'useSegmentation') &&
+                                <TableSelect id={prefix + 'segment'} withHeader dropdown dataUrl={`rest/segments-table/${selectedList}`} columns={segmentsColumns} selectionLabelIndex={1} />
+                            }
+                        </div>
                     </div>
                 </div>
             );
@@ -732,7 +727,7 @@ export default class CUD extends Component {
 
             templateEdit = <div>
                 <Dropdown id="data_sourceCustom_type" label={t('type')} options={this.customTemplateTypeOptions}/>
-                <Dropdown id="data_sourceCustom_tag_language" label={t('Tag language')} options={this.customTemplateTagLanguageOptions} disabled={isEdit}/>
+                <Dropdown id="data_sourceCustom_tag_language" label={t('tagLanguage')} options={this.customTemplateTagLanguageOptions} disabled={isEdit}/>
 
                 {customTemplateTypeForm}
             </div>;

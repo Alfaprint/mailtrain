@@ -2,8 +2,8 @@
 
 import React from "react";
 import {ACEEditor, AlignedRow, Dropdown, StaticField, TableSelect} from "../lib/form";
-import 'brace/mode/text';
-import 'brace/mode/html';
+import 'ace-builds/src-noconflict/mode-text';
+import 'ace-builds/src-noconflict/mode-html';
 
 import {MosaicoHost} from "../lib/sandboxed-mosaico";
 import {CKEditorHost} from "../lib/sandboxed-ckeditor";
@@ -141,7 +141,7 @@ export function getTemplateTypes(t, prefix = '', entityTypeId = ResourceType.TEM
             return null;
         },
         initData: () => ({
-            [prefix + 'mosaicoTemplate']: '',
+            [prefix + 'mosaicoTemplate']: null,
             [prefix + 'mosaicoData']: {}
         }),
         afterLoad: data => {

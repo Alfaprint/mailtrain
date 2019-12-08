@@ -53,7 +53,14 @@ const CampaignMessageStatus = {
     COMPLAINED: 4,
     SCHEDULED: 5,
 
-    MAX: 5
+    FAILED: 6,
+
+    MAX: 6
+};
+
+const CampaignMessageErrorType = {
+  TRANSIENT: 0,
+  PERMANENT: 1
 };
 
 
@@ -90,5 +97,6 @@ module.exports = {
     CampaignStatus,
     campaignOverridables,
     CampaignMessageStatus,
+    CampaignMessageErrorType,
     getSendConfigurationPermissionRequiredForSend
 };

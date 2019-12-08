@@ -14,7 +14,7 @@ const sendConfigurations = require('../models/send-configurations');
 const links = require('../models/links');
 const {CampaignSource, CampaignType} = require('../../shared/campaigns');
 const {toNameTagLangauge} = require('../../shared/lists');
-const {CampaignMessageStatus} = require('../../shared/campaigns');
+const {CampaignMessageStatus, CampaignMessageErrorType} = require('../../shared/campaigns');
 const tools = require('./tools');
 const htmlToText = require('html-to-text');
 const request = require('request-promise');
@@ -202,14 +202,26 @@ class MessageSender {
 
             const sourceUrl = campaign.data.sourceUrl;
 
-            const response = await request.post({
-                uri: sourceUrl,
-                form,
-                resolveWithFullResponse: true
-            });
+            let response;
+            try {
+                response = await request.post({
+                    uri: sourceUrl,
+                    form,
+                    resolveWithFullResponse: true
+                });
+            } catch (exc) {
+                log.error('MessageSender', `Error pulling content from URL (${sourceUrl})`);
+                response = {statusCode: exc.message};
+            }
 
             if (response.statusCode !== 200) {
-                throw new Error(`Received status code ${httpResponse.statusCode} from ${sourceUrl}`);
+                const statusError = new Error(`Received status code ${response.statusCode} from ${sourceUrl}`);
+                if (response.statusCode >= 500) {
+                  statusError.campaignMessageErrorType = CampaignMessageErrorType.TRANSIENT;
+                } else {
+                  statusError.campaignMessageErrorType = CampaignMessageErrorType.PERMANENT;
+                }
+                throw statusError;
             }
 
             html = response.body;
@@ -504,13 +516,21 @@ class MessageSender {
         try {
             result = await this._sendMessage({listId: campaignMessage.list, subscriptionId: campaignMessage.subscription});
         } catch (err) {
-            await knex('campaign_messages')
+            if (err.campaignMessageErrorType === CampaignMessageErrorType.PERMANENT) {
+              await knex('campaign_messages')
+                .where({id: campaignMessage.id})
+                .update({
+                  status: CampaignMessageStatus.FAILED,
+                  updated: new Date()
+                });
+            } else {
+              await knex('campaign_messages')
                 .where({id: campaignMessage.id})
                 .update({
                     status: CampaignMessageStatus.SCHEDULED,
                     updated: new Date()
                 });
-
+            }
             throw err;
         }
 
@@ -565,10 +585,11 @@ async function sendQueuedMessage(queuedMessage) {
             subscriptionId: msgData.subscriptionId,
             listId: msgData.listId,
             to: msgData.to,
+            mergeTags: msgData.mergeTags,
             encryptionKeys: msgData.encryptionKeys
         });
     } catch (err) {
-        await knex.insert({
+        await knex('queued').insert({
             id: queuedMessage.id,
             send_configuration: queuedMessage.send_configuration,
             type: queuedMessage.type,
@@ -579,6 +600,18 @@ async function sendQueuedMessage(queuedMessage) {
     }
 
     if (messageType === MessageType.TRIGGERED) {
+        await knex('campaign_messages').insert({
+            hash_email: result.subscriptionGrouped.hash_email,
+            subscription: result.subscriptionGrouped.id,
+            campaign: campaign.id,
+            list: result.list.id,
+            send_configuration: queuedMessage.send_configuration,
+            status: CampaignMessageStatus.SENT,
+            response: result.response,
+            response_id: result.response_id,
+            updated: new Date()
+        });
+
         await knex('campaigns').where('id', campaign.id).increment('delivered');
     }
 
