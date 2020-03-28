@@ -558,7 +558,7 @@ async function handleUnsubscribe(list, subscriptionCid, autoUnsubscribe, campaig
         try {
             const subscription = await subscriptions.unsubscribeByCidAndGet(contextHelpers.getAdminContext(), list.id, subscriptionCid, campaignCid);
 
-            await mailHelpers.sendUnsubscriptionConfirmed(req.locale, list, subscription.email, subscription);
+            // await mailHelpers.sendUnsubscriptionConfirmed(req.locale, list, subscription.email, subscription);
 
             res.redirect('/subscription/' + encodeURIComponent(list.cid) + '/unsubscribed-notice');
 
